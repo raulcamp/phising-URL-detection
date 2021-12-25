@@ -7,8 +7,6 @@ import pickle
 import re
 import math
 
-df = pd.read_csv('Phishing_Dataset.csv')
-
 def checkSpecial(url):
     """Returns number of special characters in string"""
     regex = re.compile('[@_!#$%^&*()<>?|}{~]')
@@ -41,28 +39,32 @@ def feature_transform(df):
     df.insert(2, 'numSD', [numSubDomains(url) for url in df['URL']])
     del df['URL']
 
+def train():
+    df = pd.read_csv('script/data/Phishing_Dataset.csv')
+    feature_transform(df)
+    #split into parameters and label for supervised learning
+    X, y = df.iloc[:, :-1], df.iloc[:, -1]
+    #split into training and testing data
+    X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=123)
+    #train model
+    model = xgb.XGBClassifier(learning_rate=0.2, use_label_encoder=False)
+    model.fit(X_train, y_train)
+    #predictions /validation
+    preds = model.predict(X_test)
+    predictions = [round(value) for value in preds]
+    rmse = np.sqrt(mean_squared_error(y_test, predictions))
+    accuracy = accuracy_score(y_test,predictions)
+    f1 = f1_score(y_test, predictions)
+    return model, predictions, rmse, f1, accuracy
 
-feature_transform(df)
-#split into parameters and label for supervised learning
-X, y = df.iloc[:, :-1], df.iloc[:, -1]
-data_dmatrix = xgb.DMatrix(data=X, label=y)
-#split into training and testing data
-X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=123)
-#train model
-model = xgb.XGBClassifier(learning_rate=0.2)
-model.fit(X_train, y_train)
-#predictions /validation
-preds = model.predict(X_test)
-predictions = [round(value) for value in preds]
-rmse = np.sqrt(mean_squared_error(y_test, predictions))
-#("RMSE: %f" % (rmse))
-
+def save(model):
+    pickle.dump(model, open("script/xgb_model", "wb"))
 
 if __name__ == '__main__':
-    #score = accuracy_score(y_test,predictions)
-    #print(score)
-    print("F1 Score on training dataset:")
-    f1 = f1_score(y_test, predictions)
-    print(f1)
+    # train
+    model, _, rmse, f1, accuracy = train()
+    print("RMSE: %f" % (rmse))
+    print("f1: %f" % (f1))
+    print("accuracy: %f" % (accuracy))
     # save model
-    pickle.dump(model, open("xgb_model", "wb"))
+    save(model)
