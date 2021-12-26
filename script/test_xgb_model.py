@@ -1,6 +1,6 @@
 import pandas as pd
 import pickle
-from train_model import feature_transform
+from train_xgb_model import feature_transform
 
 model = pickle.load(open('script/xgb_model', 'rb'))
 

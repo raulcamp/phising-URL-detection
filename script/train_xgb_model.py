@@ -1,6 +1,6 @@
 import numpy as np
 import pandas as pd
-from sklearn.metrics import mean_squared_error, accuracy_score, f1_score
+from sklearn.metrics import mean_squared_error, accuracy_score, f1_score, precision_score, recall_score
 from sklearn.model_selection import train_test_split
 import xgboost as xgb
 import pickle
@@ -52,19 +52,23 @@ def train():
     #predictions /validation
     preds = model.predict(X_test)
     predictions = [round(value) for value in preds]
-    rmse = np.sqrt(mean_squared_error(y_test, predictions))
-    accuracy = accuracy_score(y_test,predictions)
-    f1 = f1_score(y_test, predictions)
-    return model, predictions, rmse, f1, accuracy
+    return (model,
+            mean_squared_error(y_test, predictions), 
+            accuracy_score(y_test, predictions, normalize=True),
+            precision_score(y_test, predictions),
+            recall_score(y_test, predictions),
+            f1_score(y_test, predictions))
 
 def save(model):
     pickle.dump(model, open("script/xgb_model", "wb"))
 
 if __name__ == '__main__':
     # train
-    model, _, rmse, f1, accuracy = train()
+    model, rmse, accuracy, precision, recall, f1 = train()
     print("RMSE: %f" % (rmse))
     print("f1: %f" % (f1))
     print("accuracy: %f" % (accuracy))
+    print("precision: %f" % (precision))
+    print("recall: %f" % (recall))
     # save model
     save(model)
