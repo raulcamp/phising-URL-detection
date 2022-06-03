@@ -39,8 +39,8 @@ def feature_transform(df):
     df.insert(2, 'numSD', [numSubDomains(url) for url in df['URL']])
     del df['URL']
 
-def train():
-    df = pd.read_csv('script/data/Phishing_Dataset.csv')
+def train(input_path):
+    df = pd.read_csv(input_path)
     feature_transform(df)
     #split into parameters and label for supervised learning
     X, y = df.iloc[:, :-1], df.iloc[:, -1]
@@ -49,7 +49,7 @@ def train():
     #train model
     model = xgb.XGBClassifier(learning_rate=0.2, use_label_encoder=False)
     model.fit(X_train, y_train)
-    #predictions /validation
+    #predictions/validation
     preds = model.predict(X_test)
     predictions = [round(value) for value in preds]
     return (model,
@@ -59,16 +59,18 @@ def train():
             recall_score(y_test, predictions),
             f1_score(y_test, predictions))
 
-def save(model):
-    pickle.dump(model, open("script/xgb_model", "wb"))
+def save(model, path):
+    pickle.dump(model, open(path, "wb"))
 
 if __name__ == '__main__':
+    input_data_path = 'script/data/Phishing_Dataset.csv'
+    output_model_path = 'script/models/xgb_model'
     # train
-    model, rmse, accuracy, precision, recall, f1 = train()
+    model, rmse, accuracy, precision, recall, f1 = train(input_data_path)
     print("RMSE: %f" % (rmse))
     print("f1: %f" % (f1))
     print("accuracy: %f" % (accuracy))
     print("precision: %f" % (precision))
     print("recall: %f" % (recall))
     # save model
-    save(model)
+    save(model, output_model_path)
