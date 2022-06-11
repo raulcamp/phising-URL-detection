@@ -1,47 +1,18 @@
-import numpy as np
-import pandas as pd
 from sklearn.metrics import mean_squared_error, accuracy_score, f1_score, precision_score, recall_score
 from sklearn.model_selection import train_test_split
+from url_featurizer import URLFeaturizer
+import pandas as pd
 import xgboost as xgb
 import pickle
-import re
-import math
 
-def checkSpecial(url):
-    """Returns number of special characters in string"""
-    regex = re.compile('[@_!#$%^&*()<>?|}{~]')
-    return len([c for c in url if regex.search(c)])
-
-def getNums(url):
-    """Returns number of digits in string"""
-    return len([c for c in url if c.isdigit()])
-
-def entropy(url):
-    """Returns entropy of string"""
-    s = url.strip()
-    prob = [float(s.count(c)) / len(s) for c in dict.fromkeys(list(s))]
-    ent = sum([(p * math.log(p) / math.log(2.0)) for p in prob])
-    return ent
-
-def numSubDomains(url):
-    """Returns number of subdomains in the given URL"""
-    subdomains = url.split('http')[-1].split('//')[-1].split('/')
-    return len(subdomains)-1
-
-
-def feature_transform(df):
-    """Featurizes the URL string into the data frame"""
-    df.insert(2, 'len_url', [len(url) for url in df['URL']])
-    df.insert(2, 'numerical', [getNums(url) for url in df['URL']])
-    df.insert(2, 'special', [checkSpecial(url) for url in df['URL']])
-    df.insert(2, 'hasPercent', [('%' in url) for url in df['URL']])
-    #df.insert(2, 'entropy', [entropy(url) for url in df['URL']])
-    df.insert(2, 'numSD', [numSubDomains(url) for url in df['URL']])
-    del df['URL']
+def transform(df):
+    rows = [URLFeaturizer(URL).extract() for URL in df['URL']]
+    return pd.concat([pd.DataFrame(rows), df.drop(columns=['URL'])], axis=1, join='inner')
 
 def train(input_path):
     df = pd.read_csv(input_path)
-    feature_transform(df)
+    # feature_transform(df)
+    df = transform(df)
     #split into parameters and label for supervised learning
     X, y = df.iloc[:, :-1], df.iloc[:, -1]
     #split into training and testing data
