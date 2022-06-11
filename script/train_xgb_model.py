@@ -10,19 +10,16 @@ def transform(df):
     return pd.concat([pd.DataFrame(rows), df.drop(columns=['URL'])], axis=1, join='inner')
 
 def train(input_path):
-    df = pd.read_csv(input_path)
-    # feature_transform(df)
-    df = transform(df)
-    #split into parameters and label for supervised learning
+    df = transform(pd.read_csv(input_path))
+    # split into parameters and label for supervised learning
     X, y = df.iloc[:, :-1], df.iloc[:, -1]
-    #split into training and testing data
+    # split into training and testing data
     X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=123)
-    #train model
+    # train model
     model = xgb.XGBClassifier(learning_rate=0.2, use_label_encoder=False)
     model.fit(X_train, y_train)
-    #predictions/validation
-    preds = model.predict(X_test)
-    predictions = [round(value) for value in preds]
+    # generate predicted labels
+    predictions = model.predict(X_test)
     return (model,
             mean_squared_error(y_test, predictions), 
             accuracy_score(y_test, predictions, normalize=True),
