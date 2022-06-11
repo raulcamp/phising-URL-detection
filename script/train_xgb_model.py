@@ -16,7 +16,7 @@ def train(input_path):
     # split into training and testing data
     X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=123)
     # train model
-    model = xgb.XGBClassifier(learning_rate=0.2, use_label_encoder=False)
+    model = xgb.XGBClassifier(learning_rate=0.2)
     model.fit(X_train, y_train)
     # generate predicted labels
     predictions = model.predict(X_test)
